@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "storageAccountPrefix": {
+      "type": "string"
+    },
+    "storageAccountType": {
+      "type": "string"
+    },
+    "storageAccountsApiVersion": {
+      "type": "string"
+    },
+    "clusterName": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "storageAccountPrefix": "[tolower(parameters('storageAccountPrefix'))]",
+    "storageAccountNames": [
+      "[concat(variables('storageAccountPrefix'),'1')]",
+      "[concat(variables('storageAccountPrefix'),'2')]",
+      "[concat(variables('storageAccountPrefix'),'3')]",
+      "[concat(variables('storageAccountPrefix'),'4')]",
+      "[concat(variables('storageAccountPrefix'),'5')]"
+    ],
+    "vhdContainerName": "[concat(tolower(parameters('clusterName')),'vhds')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountNames')[copyIndex()]]",
+      "apiVersion": "[parameters('storageAccountsApiVersion')]",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "storageLoop",
+        "count": "[length(variables('storageAccountNames'))]"
+      },
+      "properties": {
+        "accountType": "[parameters('storageAccountType')]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageAccountIds": {
+      "value": [
+        "[resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[0])]",
+        "[resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[1])]",
+        "[resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[2])]",
+        "[resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[3])]",
+        "[resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[4])]"
+      ],
+      "type": "array"
+    },
+    "storageAccountBlobUrls": {
+      "value": [
+        "[reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[0]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob]",
+        "[reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[1]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob]",
+        "[reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[2]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob]",
+        "[reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[3]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob]",
+        "[reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[4]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob]"
+      ],
+      "type": "array"
+    },
+    "vhdContainerUrls": {
+      "value": [
+        "[concat(reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[0]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob,variables('vhdContainerName'))]",
+        "[concat(reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[1]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob,variables('vhdContainerName'))]",
+        "[concat(reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[2]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob,variables('vhdContainerName'))]",
+        "[concat(reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[3]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob,variables('vhdContainerName'))]",
+        "[concat(reference(resourceId('Microsoft.Storage/StorageAccounts',variables('storageAccountNames')[4]),parameters('storageAccountsApiVersion')).primaryEndpoints.blob,variables('vhdContainerName'))]"
+      ],
+      "type": "array"
+    }
+  }
+}

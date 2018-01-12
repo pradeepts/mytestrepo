@@ -1,0 +1,248 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "loadBalancersApiVersion": {
+      "type": "string"
+    },
+    "deploymentsApiVersion": {
+      "type": "string"
+    },
+    "clusterIPTemplateURL": {
+      "type": "string"
+    },
+    "clusterIPAddressName": {
+      "type": "string"
+    },
+    "dnsNameForClusterIP": {
+      "type": "string"
+    },
+    "publicIPAllocationMethod": {
+      "type": "string"
+    },
+    "publicIPAddressesApiVersion": {
+      "type": "string"
+    },
+    "servicePort": {
+      "type": "int"
+    },
+    "serviceProtocol": {
+      "type": "string"
+    },
+    "loadBalancerName": {
+      "type": "string"
+    },
+    "networkSecurityGroupName": {
+      "type": "string"
+    },
+    "securityRules": {
+      "type": "array"
+    },
+    "networkSecurityGroupsApiVersion": {
+      "type": "string"
+    },
+    "sshNatStartPort": {
+      "type": "int"
+    },
+    "adminNatStartPort": {
+      "type": "int"
+    },
+    "restNatStartPort": {
+      "type": "int"
+    }
+  },
+  "variables": {
+    "frontEndName": "LoadBalancerFrontEnd",
+    "backendPoolName": "LoadBalancerBackend",
+    "probeName": "vtmAdminProbe",
+
+    "loadBalancerId": "[resourceId('Microsoft.Network/loadBalancers',parameters('loadBalancerName'))]",
+    "frontEndIPConfigID": "[concat(variables('loadBalancerId'),'/frontendIPConfigurations/',variables('frontEndName'))]",
+    "lbPoolID": "[concat(variables('loadBalancerId'),'/backendAddressPools/',variables('backendPoolName'))]",
+    "vtmAdminProbeID": "[concat(variables('loadBalancerId'),'/probes/',variables('probeName'))]",
+    "sshNatPoolName": "sshNatPool",
+    "sshNatEndPort": "[add(parameters('sshNatStartPort'),63)]",
+    "sshNatBackendPort": 22,
+    "adminNatPoolName": "adminNatPool",
+    "adminNatEndPort": "[add(parameters('adminNatStartPort'),63)]",
+    "adminNatBackendPort": 9090,
+    "restNatPoolName": "restNatPool",
+    "restNatEndPort": "[add(parameters('restNatStartPort'),63)]",
+    "restNatBackendPort": 9070
+  },
+  "resources": [
+    {
+      "name": "clusterIPTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "[parameters('deploymentsApiVersion')]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[parameters('clusterIPTemplateURL')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "publicIPName": {
+            "value": "[parameters('clusterIPAddressName')]"
+          },
+          "dnsName": {
+            "value": "[parameters('dnsNameForClusterIP')]"
+          },
+          "publicIPAllocationMethod": {
+            "value": "[parameters('publicIPAllocationMethod')]"
+          },
+          "publicIPAddressesApiVersion": {
+            "value": "[parameters('publicIPAddressesApiVersion')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "[parameters('loadBalancersApiVersion')]",
+      "name": "[parameters('loadBalancerName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('frontEndName')]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[reference('clusterIPTemplate').outputs.publicIPId.value]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('backendPoolName')]"
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "[variables('sshNatPoolName')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": "[parameters('sshNatStartPort')]",
+              "frontendPortRangeEnd": "[variables('sshNatEndPort')]",
+              "backendPort": "[variables('sshNatBackendPort')]"
+            }
+          },
+          {
+            "name": "[variables('adminNatPoolName')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": "[parameters('adminNatStartPort')]",
+              "frontendPortRangeEnd": "[variables('adminNatEndPort')]",
+              "backendPort": "[variables('adminNatBackendPort')]"
+            }
+          },
+          {
+            "name": "[variables('restNatPoolName')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": "[parameters('restNatStartPort')]",
+              "frontendPortRangeEnd": "[variables('restNatEndPort')]",
+              "backendPort": "[variables('restNatBackendPort')]"
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "vTMTrafficRule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID')]"
+              },
+              "protocol": "[parameters('serviceProtocol')]",
+              "frontendPort": "[parameters('servicePort')]",
+              "backendPort": "[parameters('servicePort')]",
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 4,
+              "probe": {
+                "id": "[variables('vtmAdminProbeID')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[variables('probeName')]",
+            "properties": {
+              "protocol": "tcp",
+              "port": 9090,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[parameters('networkSecurityGroupsApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": "[parameters('securityRules')]"
+      }
+    }
+  ],
+  "outputs": {
+    "loadBalancerId": {
+      "value": "[variables('loadBalancerId')]",
+      "type": "string"
+    },
+    "loadBalancerBackendPoolId": {
+      "value": "[reference(variables('loadBalancerId')).backendAddressPools[0].id]",
+      "type": "string"
+    },
+    "loadBalancerFrontendIPConfigId": {
+      "value": "[reference(variables('loadBalancerId')).frontendIPConfigurations[0].id]",
+      "type": "string"
+    },
+    "loadBalancerInboundNatPoolIds": {
+      "value": [
+        {
+          "id": "[reference(variables('loadBalancerId')).inboundNatPools[0].id]"
+        },
+        {
+          "id": "[reference(variables('loadBalancerId')).inboundNatPools[1].id]"
+        }
+      ],
+      "type": "array"
+    },
+    "networkSecurityGroupId": {
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
+      "type": "string"
+    },
+    "fqdn": {
+      "value": "[reference('clusterIPTemplate').outputs.fqdn.value]",
+      "type": "string"
+    },
+    "ipaddress": {
+      "value": "[reference('clusterIPTemplate').outputs.ipaddress.value]",
+      "type": "string"
+    }
+  }
+}
