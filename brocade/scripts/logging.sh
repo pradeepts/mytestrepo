@@ -9,6 +9,7 @@ AZUREUSER=$1;
 BASE_URL=$2
 SCRIPTNAME=$3
 HOMEDIR="/home/$AZUREUSER";
+touch $HOMEDIR/config.log
 CONFIG_LOG_FILE_PATH="$HOMEDIR/config.log";
 
 # Validate that all arguments are supplied
