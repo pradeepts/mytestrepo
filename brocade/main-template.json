@@ -56,22 +56,7 @@
             "metadata": {
                 "description": "The SKU type that defines the license to be provisioned."
             },
-            "allowedValues": [
-                "stm_dev_byol",
-                "stm_csp_500_l",
-                "stm_csp_500_l2",
-                "stm_csp_500_m1",
-                "stm_csub_1000_l_64",
-                "stm_csub_1000_m_64",
-                "stm_csub_1000_h_64",
-                "stm_csub_2000_l_64",
-                "stm_csub_1000_l_saf_64",
-                "stm_csub_1000_m_saf_64",
-                "stm_csub_1000_h_saf_64",
-                "stm_csub_2000_l_saf_64",
-                "safpx_csub_1000_64"
-            ],
-            "defaultValue": "stm_dev_byol"
+          "defaultValue": "vtm-csp-500-1"
         },
         "version": {
             "type": "string",
