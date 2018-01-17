@@ -11,12 +11,12 @@ SCRIPTNAME=$3
 HOMEDIR="/home/$AZUREUSER";
 touch $HOMEDIR/config.log
 CONFIG_LOG_FILE_PATH="$HOMEDIR/config.log";
-
+echo "AZUREUSER=$1" >> $HOMEDIR/config.log
 # Validate that all arguments are supplied
 if [ $# -lt 5 ]; then echo "Insufficient parameters supplied. Exiting"; exit 1; fi
 
 # Get the script for running as Azure user
-cd "/home/$AZUREUSER";
+cd "/home/$AZUREUSER"
 sudo -u $AZUREUSER /bin/bash -c "wget -N ${BASE_URL}/scripts/${SCRIPTNAME}";
 cat ${SCRIPTNAME} | tr -d '\r' > new${SCRIPTNAME}
 
