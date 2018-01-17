@@ -99,22 +99,10 @@
       }
     },
     "sku_products": {
-      "stm_dev_byol": "brocade-virtual-traffic-manager",
-      "stm_csp_500_l": "brocade-virtual-traffic-manager",
-      "stm_csp_500_l2": "brocade-virtual-traffic-manager",
-      "stm_csp_500_m1": "brocade-virtual-traffic-manager",
-      "stm_csub_1000_l_64": "brocade-virtual-traffic-manager",
-      "stm_csub_1000_m_64": "brocade-virtual-traffic-manager",
-      "stm_csub_1000_h_64": "brocade-virtual-traffic-manager",
-      "stm_csub_2000_l_64": "brocade-virtual-traffic-manager",
-      "stm_csub_1000_l_saf_64": "brocade-virtual-traffic-manager-with-waf-module",
-      "stm_csub_1000_m_saf_64": "brocade-virtual-traffic-manager-with-waf-module",
-      "stm_csub_1000_h_saf_64": "brocade-virtual-traffic-manager-with-waf-module",
-      "stm_csub_2000_l_saf_64": "brocade-virtual-traffic-manager-with-waf-module",
-      "safpx_csub_1000_64": "brocade-virtual-web-application-firewall"
+      "vtm-dev-byol": "pulse-virtual-traffic-manager",
     },
     "imageSkuVtm": "[parameters('skuType')]",
-    "imagePublisherVtm": "brocade_communications",
+    "imagePublisherVtm": "pulse-secure",
     "imageOfferVtm": "[variables('sku_products')[parameters('skuType')]]",
     "vtmMarketplacePlan": {
       "name": "[parameters('skuType')]",
