@@ -30,4 +30,4 @@ adminloginurlname=${10}
  
  cd bin
  echo "======================================Installing Magento software==============================================="
- ./magento setup:install --admin-firstname="$firstname" --admin-lastname="$lastname" --admin-email="$adminemail" --admin-user="$adminuser" --admin-password="$adminpassword" --db-name="$dbname" --db-host="$dbhost" --db-user="$dbuser" --db-password="$dbpassword" --backend-frontname="$adminloginurlname" --cleanup-database
+ ./magento setup:install --admin-firstname="$firstname" --admin-lastname="$lastname" --admin-email="$adminemail" --admin-user="$adminuser" --admin-password="$adminpassword" --db-name="$dbname" --db-host="$dbhost" --db-user="$dbuser" --db-password="$dbpassword" --backend-frontname="$adminloginurlname" --skip-db-validation
