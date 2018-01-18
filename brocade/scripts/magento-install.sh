@@ -14,6 +14,7 @@ dbhost=$7
 dbuser=$8
 dbpassword=$9
 adminloginurlname=${10}
+dbprefix=${11}
 
 #Go to the magento installed folder 
  cd /var/www/html/uservm.com/public_html
@@ -30,4 +31,4 @@ adminloginurlname=${10}
  
  cd bin
  echo "======================================Installing Magento software==============================================="
- ./magento setup:install --admin-firstname="$firstname" --admin-lastname="$lastname" --admin-email="$adminemail" --admin-user="$adminuser" --admin-password="$adminpassword" --db-name="$dbname" --db-host="$dbhost" --db-user="$dbuser" --db-password="$dbpassword" --backend-frontname="$adminloginurlname" --skip-db-validation
+ ./magento setup:install --admin-firstname="$firstname" --admin-lastname="$lastname" --admin-email="$adminemail" --admin-user="$adminuser" --admin-password="$adminpassword" --db-name="$dbname" --db-host="$dbhost" --db-user="$dbuser" --db-password="$dbpassword" --db-prefix="$dbprefix" --skip-db-validation --backend-frontname="$adminloginurlname"
