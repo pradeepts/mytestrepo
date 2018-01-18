@@ -29,6 +29,6 @@ dbprefix=${11}
  #Restart Apache
  sudo systemctl restart apache2
  
- cd bin
- echo "======================================Installing Magento software==============================================="
- ./magento setup:install --admin-firstname="$firstname" --admin-lastname="$lastname" --admin-email="$adminemail" --admin-user="$adminuser" --admin-password="$adminpassword" --db-name="$dbname" --db-host="$dbhost" --db-user="$dbuser" --db-password="$dbpassword" --db-prefix="$dbprefix" --skip-db-validation --backend-frontname="$adminloginurlname"
+ #cd bin
+ #echo "======================================Installing Magento software==============================================="
+ #./magento setup:install --admin-firstname="$firstname" --admin-lastname="$lastname" --admin-email="$adminemail" --admin-user="$adminuser" --admin-password="$adminpassword" --db-name="$dbname" --db-host="$dbhost" --db-user="$dbuser" --db-password="$dbpassword" --db-prefix="$dbprefix" --skip-db-validation --backend-frontname="$adminloginurlname"
