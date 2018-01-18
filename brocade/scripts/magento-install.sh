@@ -14,6 +14,7 @@ dbhost=$7
 dbuser=$8
 dbpassword=$9
 adminloginurlname=${10}
+--cleanup-database
 
 #Go to the magento installed folder 
  cd /var/www/html/uservm.com/public_html
