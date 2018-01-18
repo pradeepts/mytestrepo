@@ -56,7 +56,8 @@
             "metadata": {
                 "description": "The SKU type that defines the license to be provisioned."
             },
-          "defaultValue": "vtm-csp-500-1"
+    
+            "defaultValue": "vtm-dev-byol"
         },
         "version": {
             "type": "string",
@@ -154,7 +155,7 @@
             "metadata": {
                 "artifactsBaseUrl": "The base URL of the ARM Template's resources (child templates and supporting VM extension scripts). For Azure Marketplace gallery packages, this value is passed by the Azure portal."
             },
-            "defaultValue": "https://raw.githubusercontent.com/pradeepts/testRepo/brocade/brocade/nested"
+            "defaultValue": "https://raw.githubusercontent.com/pradeepts/mytestrepo/master/brocade/nested"
         },
         "servicePortString": {
             "type": "string",
@@ -279,12 +280,6 @@
         "magentoDnsLabelPrefix": "[concat('magdns',substring(uniqueString(resourceGroup().id),4,9))]",
         "mySqlDnsLabelPrefix": "[concat('sqldns',substring(uniqueString(resourceGroup().id),4,9))]",
         "networkSecurityGroupName": "[concat(variables('clusterName'),'-vtmNSG')]",
-        "scriptBaseUrl":"https://raw.githubusercontent.com/pradeepts/testRepo/brocade/brocade",
-        "logScriptFileName":"logging.sh",
-        "magentoScriptFileName":"magento-vmscript.sh",
-        "dbusername":"magentouser",
-        "magentovmdns": "[concat(variables('magentoDnsLabelPrefix'),'0','.', tolower(replace(parameters('location'),' ','')), '.cloudapp.azure.com')]",
-        "logScriptUrl":"[concat(variables('scriptBaseUrl'),'/scripts/logging.sh')]",
         "securityRulesVtm": [
             {
                 "name": "allow-ssh",
@@ -343,7 +338,7 @@
         "sshKeyPath": "[concat('/home/',variables('brocadeAdminUsername'),'/.ssh/authorized_keys')]",
         "templateBaseUrl": "[concat(parameters('artifactsBaseUrl'),'/')]",
         "storageAccountTemplateURL": "[concat(variables('templateBaseUrl'), 'storageAccount.json')]",
-        "virtualNetworkTemplateURL": "https://raw.githubusercontent.com/pradeepts/testRepo/brocade/brocade/nested/vnet1.json",
+        "virtualNetworkTemplateURL": "https://raw.githubusercontent.com/pradeepts/mytestrepo/master/brocade/nested/vnet1.json",
         "clusterIPTemplateURL": "[concat(variables('templateBaseUrl'), 'publicIP-',parameters('clusterIPNewOrExisting'),'.json')]",
         "virtualTrafficManagerTemplateURL": "[concat(variables('templateBaseUrl'), 'virtualMachine.json')]",
         "loadBalancerTemplateURL": "[concat(variables('templateBaseUrl'), 'loadBalancer.json')]",
@@ -355,6 +350,10 @@
         "storageAccName": "[concat(parameters('storageAccName'),substring(uniqueString(resourceGroup().id),4,9))]",
         "virtualMachineScaleSetsApiVersion": "2016-03-30",
         "loadBalancersApiVersion": "2015-06-15",
+        "uniqStr":[
+            "[substring(uniqueString(resourceGroup().id),4,9)]",
+            "[substring(uniqueString(resourceGroup().id),1,4)]"
+        ],
         "subnet_refs": {
             "new": "[resourceId('Microsoft/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]"
         },
@@ -375,6 +374,22 @@
                 "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatPools', variables('loadBalancerName'), 'restNatPool')]"
             }
         ],
+        "logScriptUrl":"https://raw.githubusercontent.com/pradeepts/mytestrepo/master/brocade/scripts/logging.sh",
+        "logScriptFileName":"logging.sh",
+        "baseUrl":"https://raw.githubusercontent.com/pradeepts/mytestrepo/master/brocade",
+        "magentoVmScriptFilename":"magento-vmscript.sh",
+        "mysqlScriptFile":"mysql-script.sh",
+        "magentoInstallScriptFilename":"magento-install.sh",
+        "dbusername":"magentouser",
+        "firstname":"[concat('fn',substring(uniqueString(resourceGroup().id),4,9))]",
+        "lastname":"[concat('ln',substring(uniqueString(resourceGroup().id),4,9))]",
+        "adminemail":"[concat('admin',substring(uniqueString(resourceGroup().id),4,9),'@gmail.com')]",
+        "adminuser":"[concat('adminuser',substring(uniqueString(resourceGroup().id),4,9))]",
+        "adminpassword":"Random@123456",
+        "dbname":"magento",
+        "dbuser":"mysqluser",
+        "dbpassword":"Random@12345",
+        "adminLoginUrl":"[concat('admin',substring(uniqueString(resourceGroup().id),4,9))]",
         "ref_networksecuritygroup_id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
         "ref_storage_containervhd_urls": [
             "[concat('https://', variables('storageAccountName'), '1.blob.core.windows.net/', variables('clusterName'),'vhds')]",
@@ -435,11 +450,63 @@
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'),copyIndex())]",
                 "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccName'))]"
+            ],
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "[concat('magentoVmScript',copyIndex())]",
+                    "location": "[parameters('location')]",
+                    "apiVersion": "2016-04-30-preview",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'),copyIndex())]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.OSTCExtensions",
+                        "type": "CustomScriptForLinux",
+                        "typeHandlerVersion": "1.5",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[variables('logScriptUrl')]"
+                            ]
+                        },
+                        "protectedSettings": {
+                            "commandToExecute":"[concat('sh ', variables('logScriptFileName'), ' ', parameters('magentoAdminUsername'),' ',variables('baseUrl'),' ',variables('magentoVmScriptFilename'),' ',concat(variables('dbusername'),copyIndex()),' ',variables('magentoDnsLabelPrefix'),copyIndex(),'.', tolower(replace(parameters('location'),' ','')), '.cloudapp.azure.com')]"                       
+                        }
+                    }
+                }
             ]
         },
         {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('vmName'),copyIndex(), '/magentoInstallScript',copyIndex())]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat(resourceId('Microsoft.Compute/virtualMachines/', concat(parameters('vmName'),copyIndex())),'/extensions/magentoVmScript',copyIndex())]"
+            ],
+            "apiVersion": "2016-04-30-preview",
+            "copy": {
+                "name": "loop",
+                "count": "[variables('count')]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('logScriptUrl')]"
+                    ]
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[concat('sh ', variables('logScriptFileName'),' ', parameters('magentoAdminUsername'),' ',variables('baseUrl'),' ' ,variables('magentoInstallScriptFilename'),' ' ,concat(variables('firstname'),variables('uniqStr')[copyIndex()], copyIndex()),' ',concat(variables('lastname'),variables('uniqStr')[copyIndex()],copyIndex()),' ',concat('eml',copyIndex(),variables('adminemail')),' ',concat(variables('adminuser'),variables('uniqStr')[copyIndex()],copyIndex()),' ',variables('adminpassword'),' ',variables('dbname'),' ',variables('MySqlDnsLabelPrefix'),'.', tolower(replace(parameters('location'),' ','')), '.cloudapp.azure.com',' ',variables('dbuser'),' ',variables('dbpassword'),' ',concat(variables('adminLoginUrl'),variables('uniqStr')[copyIndex()],copyIndex()),variables('uniqStr')[copyIndex()])]"
+                }
+            }
+        },
+        {
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "mysqlvmSetup",
+            "name": "[parameters('mySqlVmName')]",
             "apiVersion": "2016-04-30-preview",
             "location": "[parameters('location')]",
             "properties": {
@@ -485,12 +552,16 @@
                 "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccName'))]"
             ]
         },
-       
-        {
+         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "mysqlExtenion",
+            "name": "[concat(parameters('mySqlVmName'),'/mysqlScript')]",
             "location": "[parameters('location')]",
-            "dependsOn": ["magento-vm0"],
+            "dependsOn": [
+                 "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'),'0')]",
+                 "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'),'1')]",
+                 "[concat(resourceId('Microsoft.Compute/virtualMachines/', concat(parameters('vmName'),'0')),'/extensions/magentoVmScript0')]",
+                "[concat(resourceId('Microsoft.Compute/virtualMachines/', concat(parameters('vmName'),'1')),'/extensions/magentoVmScript1')]"
+            ],
             "apiVersion": "2016-04-30-preview",
             "properties": {
                 "publisher": "Microsoft.Azure.Extensions",
@@ -503,7 +574,7 @@
                     ]
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[concat('sh ', variables('logScriptFileName'), ' \"', parameters('magentoAdminUsername'), '\" \"' , variables('scriptBaseUrl'), '\" \"' , variables('magentoScriptFileName'), '\" \"' , variables('dbusername'), '\" \"' , variables('magentovmdns'),'\"')]"
+                    "commandToExecute": "[concat('sh ', variables('logScriptFileName'),' ', variables('mySqlAdminUserName'),' ',variables('baseUrl'),' ', variables('mysqlScriptFile'),' ',variables('magentoDnsLabelPrefix'),'0','.', tolower(replace(parameters('location'),' ','')), '.cloudapp.azure.com',' ',variables('magentoDnsLabelPrefix'),'1','.', tolower(replace(parameters('location'),' ','')), '.cloudapp.azure.com',' ',concat(variables('dbusername'),'0'),' ',concat(variables('dbusername'),'1'))]"
                 }
             }
         },
