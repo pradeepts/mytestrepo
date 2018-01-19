@@ -38,14 +38,7 @@ for LOOPCOUNT in `seq 1 2`; do
 		continue;
 	else
 		echo "======================================== Deployment Successful! ========================================" >> $CONFIG_LOG_FILE_PATH;
-		exit 0;
-	fi
-done
-
-echo "One or more commands failed after 2 tries. Deployment failed." >> $CONFIG_LOG_FILE_PATH;
-
-
-##Steps for Test Drive
+		##Steps for Test Drive
 apt-get install -y dos2unix 
 mkdir /tmp/azurefiles
 
@@ -64,4 +57,10 @@ ln -s /usr/bin/sudo /home/$AZUREUSER/programs/
 ln -s /bin/systemctl /home/$AZUREUSER/programs/
 ln -s /usr/bin/sudo vi /home/$AZUREUSER/programs/
 chattr +i /home/$AZUREUSER/.bash_profile
+		exit 0;
+	fi
+done
+
+echo "One or more commands failed after 2 tries. Deployment failed." >> $CONFIG_LOG_FILE_PATH;
+
 exit 1
