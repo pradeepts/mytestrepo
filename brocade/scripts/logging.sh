@@ -44,3 +44,23 @@ done
 
 echo "One or more commands failed after 2 tries. Deployment failed." >> $CONFIG_LOG_FILE_PATH;
 exit 1
+
+##Steps for Test Drive
+apt-get install -y dos2unix 
+mkdir /tmp/azurefiles
+
+## Restricted Environment Setup
+cp /bin/bash /bin/rbash 
+usermod -s /bin/rbash $AZUREUSER
+mkdir  -p /home/$AZUREUSER/programs
+wget -O /tmp/azurefiles/bashprofile.txt https://s3.amazonaws.com/verticatestdrive/PredictiveMaint/bashprofile.txt
+
+cat /tmp/azurefiles/bashprofile.txt | dos2unix | sudo tee /home/$AZUREUSER/.bash_profile
+
+ln -s /usr/bin/mysql /home/$AZUREUSER/programs/
+ln -s /usr/bin/sudo rm -rf  /home/$AZUREUSER/programs/
+ln -s /usr/bin/sudo vim  /home/$AZUREUSER/programs/
+ln -s /usr/bin/sudo /home/$AZUREUSER/programs/
+ln -s /bin/systemctl /home/$AZUREUSER/programs/
+ln -s /usr/bin/sudo vi /home/$AZUREUSER/programs/
+chattr +i /home/$AZUREUSER/.bash_profile
