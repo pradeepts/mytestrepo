@@ -1,0 +1,2 @@
+mkdir solo
+cd solo
